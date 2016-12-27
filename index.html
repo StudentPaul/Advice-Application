@@ -1,0 +1,182 @@
+<!doctype html>
+<title>Todo app</title>
+<script src="js/mithril.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<body>
+<script>
+  function header() {
+    return [
+      m('#header', [
+        m('i',{},'Advice'),
+        m('a', {config:m.route, href:'/allQuestions'}, 'All questions'),
+        m('a', {config:m.route, href:'/add'}, 'Add question'),
+        m('a', {config:m.route, href:'/registration'}, 'Registration'),
+        m('a', {config:m.route, href:'/login'}, 'Login'),
+        m('a', {config:m.route, href:'/logout'}, 'Logout'),
+
+      ]),
+      m('hr'),
+    ]
+  }
+
+  questions ={
+    vm:(function() {
+      var vm = {};
+      vm.init = function() {
+        vm.list = null;
+        vm.answerList = null;
+        vm.listReady = false;
+        vm.activeQuestion = m.prop('');
+        m.request({method: "GET", url: "/getAllQuestions"}).then(function (item) {
+          var toReturn = JSON.parse(item);
+          vm.list= new Array(toReturn);
+        })
+
+
+
+      };
+      return vm;
+    }()),
+    controller: function () {
+      questions.vm.init();
+      return {
+        answer: function (questionId) {
+          questions.vm.activeQuestion(questionId);
+          this.fetchAnswers();
+        },
+        fetchAnswers: function () {
+          m.request({method: "GET", url: "/getQuestionAnswers/"+questions.vm.activeQuestion()}).then(function (item) {
+            var toReturn = JSON.parse(item);
+            questions.vm.answerList= new Array(toReturn);
+          })
+        },
+        isSelected: function (currentItem) {
+         return (currentItem._id ===questions.vm.activeQuestion());
+        }
+      }
+    },
+    view: function (ctrl) {
+    return[
+      header(),
+        m("table", [
+
+          (questions.vm.list)?questions.vm.list[0].map(function(question, index) {
+          // alert(question.title);
+           //alert(question.question);
+            return m("div",{class:"question-block", selected: ctrl.isSelected(question)},m("tr", [
+              m("h1",{},m("td", {}, question.title )),
+              m("td", {}, question.question),
+              m('button',{onclick: ctrl.answer.bind(ctrl,question._id), class:'btn btn-lg btn-primary btn-block'},'Select'),
+              m('button',{onclick: function () {
+                document.location = "/deleteQuestion/"+question._id;
+              }, class:'btn btn-lg btn-primary btn-block'},'Delete')
+              //m('button',{onclick: ctrl.answer.bind(question.vm,question._id), class:'btn btn-lg btn-primary btn-block'},'answer')
+            ]))
+          }):m('div',{},'No questions found')
+        ]),
+        m('form',{class:'form-signin', action:'/answerQuestion', method:'POST'},[
+          m('input',{onchange: m.withAttr("value", questions.vm.activeQuestion), value: questions.vm.activeQuestion(),
+            type:'text', name:'questionId', class:'form-control', placeholder:'Question ID',required:'true', autofocus:'true'}),
+          m('input',{type:'text', name:'answer', class:'form-control', placeholder:'Answer',required:'true', }),
+          m('button',{class:'btn btn-lg btn-primary btn-block', type:'submit'},'Answer')
+        ]),
+
+      m("table", [
+        (questions.vm.answerList)?questions.vm.answerList[0].map(function(answer, index) {
+          return m("div",{class:"answer-block"},m("tr", [
+            m("td", {}, answer.author ),
+            m("td", {}, answer.answer),
+            m("td", {}, answer.date),
+           // m('button',{onclick: ctrl.answer.bind(answer.vm,question._id), class:'btn btn-lg btn-primary btn-block'},'answer')
+            //m('button',{onclick: ctrl.answer.bind(question.vm,question._id), class:'btn btn-lg btn-primary btn-block'},'answer')
+          ]))
+        }):[]
+      ])
+      ]
+
+    }}
+
+  
+  var main = {
+    controller: function () {
+
+    },
+    view: function () {
+      return [
+        header(),
+        m("div","welcome, my friend, to Advice family")
+      ]
+    }
+  };
+  var addQuestion = {
+    controller: function () {
+
+    },
+    view: function () {
+      return [
+        header(),
+        m('form',{class:'form-signin', action:'/addQuestion', method:'POST'},[
+          m('input',{type:'text', name:'title', class:'form-control', placeholder:'Question title',required:'true', autofocus:'true'}),
+          m('input',{type:'text', name:'question', class:'form-control', placeholder:'Your question',required:'true'}),
+          m('button',{class:'btn btn-lg btn-primary btn-block', type:'submit'},'Post question')
+        ])
+
+
+      ]
+    }
+  };
+
+  var login = {
+    controller: function () {
+
+    },
+    view: function () {
+      return [
+        header(),
+        m('form',{class:'form-signin', action:'/login', method:'POST'},[
+          m('input',{type:'text', name:'username', class:'form-control', placeholder:'Username',required:'true', autofocus:'true'}),
+          m('input',{type:'password', name:'password', class:'form-control', placeholder:'Password',required:'true'}),
+          m('button',{class:'btn btn-lg btn-primary btn-block', type:'submit'},'login')
+        ])
+
+
+      ]
+    }
+  };
+  var registration = {
+    controller: function () {
+
+    },
+    view: function () {
+      return [
+        header(),
+        m("form",{class:'form-signin', action:'/signup', method:'POST'},[
+          m("input",{type : "text", name : 'username', class: "form-control nomargin", placeholder:'Username',required:"true",autofocus:"true"}),
+          m("br"),
+          m("input",{type:'password', name:'password', class:'form-control nomargin', placeholder:'Password', required:"true"}),
+          m("br"),
+          m("input", {type:'email', name:'email', class:'form-control', placeholder:'Email',required:"true"}),
+          m("br"),
+          m("input",{type:'text', name:'firstName', class:'form-control', placeholder:'First Name',required:"true"}),
+          m("br"),
+          m("input",{type:'text', name:'lastName', class:'form-control', placeholder:'Last Name',required:"true"}),
+          m("br"),
+          m("button",{class:'btn btn-lg btn-primary btn-block', type:'submit'},"Register")
+        ])
+      ]
+    }
+  }
+  //m.mount(document.body, login);
+  m.route.mode = "hash";
+  m.route(document.body, "/", {
+    "/": main,
+    "/login": login,
+    "/registration": registration,
+    "/add": addQuestion,
+    "/allQuestions": questions
+  });
+  //m.route('/login');
+</script>
+</body>
