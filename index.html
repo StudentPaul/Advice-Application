@@ -52,6 +52,18 @@
             questions.vm.answerList= new Array(toReturn);
           })
         },
+        fetchMyQuestions: function () {
+          m.request({method: "GET", url: "/getOwnQuestions"}).then(function (item) {
+            var toReturn = JSON.parse(item);
+            questions.vm.list= new Array(toReturn);
+          })
+        },
+        fetchAllQuestions: function () {
+          m.request({method: "GET", url: "/getAllQuestions"}).then(function (item) {
+            var toReturn = JSON.parse(item);
+            questions.vm.list= new Array(toReturn);
+          })
+        },
         isSelected: function (currentItem) {
          return (currentItem._id ===questions.vm.activeQuestion());
         }
@@ -60,6 +72,8 @@
     view: function (ctrl) {
     return[
       header(),
+      m('button',{onclick: ctrl.fetchMyQuestions.bind(ctrl), class:'btn btn-lg btn-primary btn-block'},'Show only my questions'),
+      m('button',{onclick:ctrl.fetchAllQuestions.bind(ctrl), class:'btn btn-lg btn-primary btn-block'},'Show all questions'),
         m("table", [
 
           (questions.vm.list)?questions.vm.list[0].map(function(question, index) {

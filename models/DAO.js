@@ -102,20 +102,23 @@ module.exports = {
   getUserQuestions: function (userId, done) {
     Question.find({authorId: userId},function (err, questions) {
       if (err){
-        done(new Error('Error while getting user"s questions'))
+        return done(new Error('Error while getting user"s questions'))
       }
-      done(null, questions);
+      return done(null, questions);
     })
   },
   getAllQuestions: function (done) {
     Question.find(null,function (err, questions) {
       if (err){
-        done(new Error('Error while getting all questions'))
+        return done(new Error('Error while getting all questions'))
       }
-      done(null, questions);
+      return done(null, questions);
     })
   },
   addAnswer: function (questionId, answer, authorId, isVoteUp, done) {
+    if(answer.length >256){
+      return done(new Error('Answer length should be shorter than 256 chars'))
+    }
     var newAnswer = new Answer();
     newAnswer.questionId = questionId;
     newAnswer.answer = answer;
@@ -123,51 +126,51 @@ module.exports = {
     newAnswer.isVoteUp = isVoteUp || 0;
     newAnswer.save(function (err) {
       if (err){
-        done(new Error('Error while adding answer'))
+        return done(new Error('Error while adding answer'))
       }
       console.log('Answer successfully added');
-      done(null, newAnswer);
+      return done(null, newAnswer);
     })
   },
   getQuestionAnswers: function (questionId, done) {
     Answer.find({questionId: questionId},function (err, answers) {
       if (err){
-        done(new Error('Error while getting questin"s answers'))
+        return done(new Error('Error while getting questin"s answers'))
       }
-      done(null, answers);
+      return done(null, answers);
     })
   },
   findUserById: function (userId, done) {
     User.findOne({_id: userId}, function (err, user) {
       if (err){
-        done( new Error("Error while looking for user with that Id"))
+        return done( new Error("Error while looking for user with that Id"))
       }
-      done(null, user)
+      return done(null, user)
     })
   },
-  deleteQuestion: function (questionId,done) {
+  deleteQuestion: function (questionId, done) {
     Question.findByIdAndRemove(questionId, function (err, question) {
       if(err){
-        done(err);
+       return done(err);
       }
-      Answer.remove({questionId:questionId},function (err, obj) {
+      Answer.remove( {questionId : questionId} , function (err, obj) {
         if (err){
-          done(err,question);
+          return done(err, question);
         }
-        done(null, question);
+        return done(null, question);
       })
 
     })
   },
   isQuestionOwner: function (ownerId, questionId, done) {
     Question.findOne({_id:questionId},function (err,question) {
-      if(err){
-        done(err)
+      if(err) {
+        return done(err)
       }
-      if (ownerId == question.authorId){
-        done(null, true)
+      if (ownerId == question.authorId) {
+        return done(null, true)
       } else {
-        done(null, false)
+        return done(null, false)
       }
     })
   }
