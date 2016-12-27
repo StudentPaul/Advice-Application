@@ -15,7 +15,7 @@ var isValidPassword = function(user, password){
   return bCrypt.compareSync(password, user.password);
 }
 module.exports = {
-  findOrCreateUser : function(req, username, password, done){
+  findOrCreateUser : function(req, done){
     if(!validator.isEmail(req.param('email'))){
       return done(new Error('email is not valid'))
     }
@@ -25,9 +25,7 @@ module.exports = {
     if(!validator.isAlphanumeric(req.param('username'))){
       return done(new Error('Username should contain only letters and numbers'))
     }
-
-    return function(){
-      User.findOne({ 'username' :  username }, function(err, user) {
+      User.findOne({ 'username' :  req.param('username') }, function(err, user) {
         // In case of any error, return using the done method
         if (err){
           console.log('Error in SignUp: '+err);
@@ -35,16 +33,16 @@ module.exports = {
         }
         // already exists
         if (user) {
-          console.log('User already exists with username: '+username);
-          return done(null, false);
+          console.log('User already exists with username: '+req.param('username'));
+          return done(new Error('user already exists'), false);
         } else {
           // if there is no user with that email
           // create the user
           var newUser = new User();
 
           // set the user's local credentials
-          newUser.username = username;
-          newUser.password = createHash(password);
+          newUser.username = req.param('username');
+          newUser.password = createHash(req.param('password'));
           newUser.email = req.param('email');
           newUser.firstName = req.param('firstName');
           newUser.lastName = req.param('lastName');
@@ -60,7 +58,6 @@ module.exports = {
           });
         }
       });
-    }
   },
   findUser: function(req, username, password, done) {
     // check in mongo if a user with username exists or not

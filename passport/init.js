@@ -2,7 +2,6 @@
  * Created by socio on 12/24/2016.
  */
 var login = require('./login');
-var signup = require('./signup');
 var User = require('../models/user');
 
 module.exports = function(passport){
@@ -20,8 +19,7 @@ module.exports = function(passport){
     });
   });
 
-  // Setting up Passport Strategies for Login and SignUp/Registration
+  // Setting up Passport Strategy for Login
   login(passport);
-  signup(passport);
 
 }

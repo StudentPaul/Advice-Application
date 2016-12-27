@@ -21,30 +21,19 @@ module.exports = function (passport) {
   });
 
  //nothing
-  router.post('/signup',passport.authenticate('signup'), function (req,res) {
+ /* router.post('/signup',passport.authenticate('signup'), function (req,res) {
      res.send('URAAAAA')
   });
- /*router.post('/signup', function (req,res,next) {
-    passport.authenticate('signup',function (err, user, info) {
-      if(err){
-        return next(err);
-      }
-      if(!user){
-        res.status(401).json(info);
-      }else{
-        req.logIn(user, function() {
-          req.session.userId = user._id;
-          res.json(JSON.stringify({
-            userName: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName
-          }));
-          //console.log('LOGGED ON: USER ID: '+req.session.userId);
-        })
-      }
-    })
+  */
+ router.post('/signup', function (req,res,next) {
+  DAO.findOrCreateUser(req, function (err, user) {
+    if (err){
+      res.send(err)
+    }
+    res.json(JSON.stringify(user));
+  })
   });
-*/
+
   router.get('/signout', function(req, res) {
     req.logout();
     res.redirect('/');
