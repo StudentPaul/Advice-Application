@@ -379,4 +379,54 @@ describe('DAO tests', function () {
       })
     })
   });
+  describe('#deleteQuestion1', function () {
+
+    it('deleteWithMock',function (done) {
+      Answer = {
+        remove: function () {
+
+        }
+      }
+      Question = {
+        findByIdAndRemove: function () {
+
+        }
+      }
+      var answerMock = sinon.mock(Answer);
+      var questionMock = sinon.mock(Question);
+      answerMock.expects('remove').returns(true);
+      questionMock.expects('findByIdAndRemove').once().withArgs(12856).returns(true);
+      var DAO = require('../models/DAO')(null, Question, Answer);
+      DAO.deleteQuestion(12856, function (err, question) {
+        done()
+      })
+      done()
+    })
+    // Function under test
+    // function once(fn) {
+    //   var returnValue, called = false;
+    //   return function () {
+    //     if (!called) {
+    //       called = true;
+    //       returnValue = fn.apply(this, arguments);
+    //     }
+    //     return returnValue;
+    //   };
+    // }
+    //
+    // it("returns the return value from the original function", function () {
+    //   var myAPI = { method: function () {} };
+    //   var mock = sinon.mock(myAPI);
+    //   mock.expects("method").once();
+    //
+    //   var proxy = once(myAPI.method);
+    //
+    //   assert.equal(proxy(), 42);
+    //   mock.verify();
+    // });
+
+
+
+
+  });
 })
