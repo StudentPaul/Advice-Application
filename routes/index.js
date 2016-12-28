@@ -33,9 +33,9 @@ module.exports = function (passport) {
  router.post('/signup', function (req,res,next) {
   DAO.findOrCreateUser(req, function (err, user) {
     if (err){
-      res.send(err)
+      return res.send(err.message)
     }
-    res.json(JSON.stringify(user));
+    return res.json(JSON.stringify(user));
   })
   });
 
