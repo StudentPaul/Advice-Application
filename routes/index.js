@@ -4,7 +4,12 @@
 var express = require('express');
 var router = express.Router();
 var path = require('path');
-var DAO = require('../models/DAO');
+
+var User = require('../models/user');
+var Question = require('../models/question');
+var Answer = require('../models/answer');
+var DAO = require('../models/DAO')(User, Question, Answer);
+
 var async = require('async');
 
 var isAuthenticated = function (req, res, next) {

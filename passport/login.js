@@ -3,7 +3,10 @@
  */
 
 var LocalStrategy   = require('passport-local').Strategy;
-var DAO = require('../models/DAO');
+var User = require('../models/user');
+var Question = require('../models/question');
+var Answer = require('../models/answer');
+var DAO = require('../models/DAO')(User, Question, Answer);
 var bCrypt = require('bcrypt-nodejs');
 
 module.exports = function(passport){
