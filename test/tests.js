@@ -31,7 +31,7 @@ describe('DAO tests', function () {
     //
     it('user with appropriate data registered', function (done) {
 
-      //mock for request object
+      //stub for request object
       var req = {
         param: function (paramName) {
           if (paramName === 'username') {
@@ -56,7 +56,7 @@ describe('DAO tests', function () {
       })
     })
 
-    it('too short name throws Error', function (done) {
+    it('too short name handles Error', function (done) {
       //mock for request object
       var req = {
         param: function (paramName) {
@@ -78,7 +78,7 @@ describe('DAO tests', function () {
       })
 
     })
-    it('too long name throws Error', function (done) {
+    it('too long name handles Error', function (done) {
       //mock for request object
       var req = {
         param: function (paramName) {
@@ -239,7 +239,7 @@ describe('DAO tests', function () {
 
     })
   });
-  describe('#addQuestion', function (done) {
+  describe('#addQuestion', function () {
       //stub for User mongoose model
       var Question = function () {
       };
@@ -256,7 +256,7 @@ describe('DAO tests', function () {
         })
 
       });
-    it('Too long title throws error', function (done) {
+    it('Too long title handle error', function (done) {
       DAO.addQuestion(Array(20).join("Title"),
         "Question text",234234, function (err, user) {
         assert.equal('Title length must be less than 64 and not blank', err.message);
@@ -264,14 +264,119 @@ describe('DAO tests', function () {
       })
 
     });
-    it('Too long question length throws error', function (done) {
+    it('Too long question length handle error', function (done) {
       DAO.addQuestion("Question title",
         Array(50).join("Question"),
-        234234, function (err, user) {
+        234234, function (err, question) {
           assert.equal('Question length must be less than 256 and not blank', err.message);
           return done()
         })
 
     });
+    it('Error during "write" operation handled properly', function (done){
+      Question.prototype.save = function (done) {
+        return done(new Error('Error while writing record'))
+      }
+      DAO.addQuestion("Qest. title", "question", 23452, function (err, user) {
+        assert.equal('Error while writing record', err.message)
+        return done()
+      })
+      })
+    });
+  describe('#addAnswer', function () {
+    var Answer = function () {
+    };
+    Answer.prototype.save = function (done) {
+      return done(null);
+    };
+    var DAO = require('../models/DAO')(null, null, Answer);
+    it('Add valid answer', function (done) {
+        DAO.addAnswer('324234','Answer is here', '34526',0, function (err, answer) {
+          assert.equal(null, err);
+          done();
+        })
+      });
+    it('Too long answer', function (done) {
+      DAO.addAnswer('324234',Array(80).join("Answer"), '34526',0, function (err, answer) {
+        assert.equal('Answer length should be shorter than 256 chars', err.message);
+        done();
+      })
+    });
+    it('Writing error handled properly', function (done) {
+      Answer.prototype.save = function (done) {
+        return done(new Error('Error while writing record'));
+      };
+      DAO.addAnswer('324234','Answer', '34526',0, function (err, answer) {
+        assert.equal('Error while writing record', err.message);
+        done();
+      })
     })
+
+  });
+  describe('#deleteQuestion', function () {
+    var Answer = function () {
+    };
+    Answer.remove = function (obj, done) {
+      return done(null);
+    };
+    var Question = function () {
+    };
+    Question.findByIdAndRemove = function (id, done) {
+      return done(null, {_id: id, title:"title", question: "question"});
+    };
+    var DAO = require('../models/DAO')(null, Question, Answer);
+    it('Successful deleting',function (done) {
+      DAO.deleteQuestion(1236, function (err, quest) {
+        assert.equal(1236, quest._id);
+        assert.equal(null, err);
+        done();
+      })
+    });
+    it('If question is not found, handle error',function (done) {
+      Question.findByIdAndRemove = function (id, done) {
+        return done(new Error('Question not found'));
+      };
+      DAO.deleteQuestion(1236, function (err, quest) {
+        assert('Question not found', err.message)
+        done();
+      })
+    });
+    it('If answers cant be removed, handle error',function (done) {
+      Answer.remove = function (id, done) {
+        return done(new Error('Error while romoving answers'));
+      };
+      DAO.deleteQuestion(1236, function (err, quest) {
+        assert('Error while romoving answers', err.message)
+        done();
+      })
+    });
+
+  });
+  describe('#findUser', function () {
+    var User = function () {
+
+    }
+    User.findOne = function(obj, done){
+      return done(null, {_id: 4525, firstName: 'Tom', lastName: 'Bom'})
+    }
+    var DAO = require('../models/DAO')(User, null, null);
+
+    // it('User is found in database', function (done) {
+    //   DAO.findUser({},'Kolobok','1111',function (err, user) {
+    //     assert.equal(null, err);
+    //     assert.equal('Kolobok',user.username);
+    //     assert.equal(!null, user._id);
+    //     done()
+    //   })
+    // })
+    it('User wasnt found, handle error', function (done) {
+      User.findOne = function (obj,done){
+        return done(new Error('User wasnt found'));
+      }
+      DAO.findUser({},'Kolorbok', '2222', function (err, user) {
+        assert('User wasnt found', err.message);
+        done()
+      })
+    })
+  });
 })

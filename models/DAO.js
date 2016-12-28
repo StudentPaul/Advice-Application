@@ -93,7 +93,7 @@ module.exports = function (User, Question, Answer) {
       if(!(title.length>0 && title.length<64)){
         return done(new Error('Title length must be less than 64 and not blank'));
       }
-      if(!(question.length>0 && question.length<64)){
+      if(!(question.length>0 && question.length<256)){
         return done(new Error('Question length must be less than 256 and not blank'));
       }
       var newQuestion = new Question();
@@ -105,10 +105,10 @@ module.exports = function (User, Question, Answer) {
       newQuestion.votesDown = 0;
       newQuestion.save(function (err) {
         if (err){
-          done(new Error('Error while adding question'))
+          return done(err)
         }
-        console.log('Question successfully added');
-        done(null, newQuestion);
+        //console.log('Question successfully added');
+        return done(null, newQuestion);
       })
     },
     getUserQuestions: function (userId, done) {
@@ -138,9 +138,9 @@ module.exports = function (User, Question, Answer) {
       newAnswer.isVoteUp = isVoteUp || 0;
       newAnswer.save(function (err) {
         if (err){
-          return done(new Error('Error while adding answer'))
+          return done(err)
         }
-        console.log('Answer successfully added');
+        //console.log('Answer successfully added');
         return done(null, newAnswer);
       })
     },
