@@ -102,50 +102,54 @@ module.exports = function (passport) {
       });
   });
   router.get('/deleteQuestion/:questionId', isAuthenticated, function(req, res){
-    DAO.isQuestionOwner(req.session.userId,req.params.questionId,function (err, isAuthor) {
-      if (err){
-        res.send(err)
-      }
-      if(isAuthor){
-        DAO.deleteQuestion(req.params.questionId, function (err, question) {
-          if (err){
-            res.send(err)
+    DAO.isQuestionOwner(req.session.userId,req.params.questionId)
+      .then(function (isAuthor) {
+          if(isAuthor){
+            DAO.deleteQuestion(req.params.questionId)
+              .then(question=>{res.json(JSON.stringify(question))},
+              err=>{res.send(err)})
           }
-          res.json(JSON.stringify(question));
-        })
-      }
-      else{
-        res.send('You cant delete the question you dont own');
-      }
-    })
+          else{
+            res.send('You cant delete the question you dont own');
+          }
+        },
+      err=>{res.send(err)}
+      );
+
+
   });
   router.post('/answerQuestion', isAuthenticated, function(req, res){
-    DAO.addAnswer(req.param('questionId'),req.param('answer'),req.session.userId,null, function (err, answer) {
-      if(err){
-        res.send('error while adding answer'+err);
-      }
-      res.json(JSON.stringify(answer));
-    })
+    DAO.addAnswer(req.param('questionId'),req.param('answer'),req.session.userId,null)
+      .then(
+        answer=>{res.json(JSON.stringify(answer))},
+        err=>{res.send(err)}
+      )
+
   }
   );
   router.get('/getQuestionAnswers/:questId', isAuthenticated, function(req, res){
-    DAO.getQuestionAnswers(req.params.questId, function (err, answers) {
-      if (err){
-        res.send(err);
-      }
-      async.map(answers,
-        function (answer, callback){
-        DAO.findUserById(answer.authorId, function (err, user) {
-          if(err){
-            res.send(err)
-          }
-          answer.author = user.username;
-          callback(null, {author: user.username, answer: answer.answer, date: answer.date});
-        });},
-        function (err, result) {
-        res.json(JSON.stringify(result));
-        })
-    })
+      DAO.getQuestionAnswers(req.params.questId)
+        .then(
+          function(answers) {
+            async.map(answers,
+              function (answer, callback) {
+                DAO.findUserById(answer.authorId)
+                  .then(
+                    function (user) {
+                      answer.author = user.username;
+                      callback(null, {author: user.username, answer: answer.answer, date: answer.date});
+                    },
+                    err=> {
+                      res.send(err)
+                    }
+                  )
+              },
+              function (err, result) {
+                res.json(JSON.stringify(result));
+              })
+          },
+          err=>res.send(err)
+        );
   });
   router.get('/logout', function(req, res){
     //req.logout();
