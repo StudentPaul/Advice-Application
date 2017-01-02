@@ -31,12 +31,20 @@ module.exports = function (passport) {
   });
   */
  router.post('/signup', function (req,res,next) {
-  DAO.findOrCreateUser(req, function (err, user) {
-    if (err){
-      return res.send(err.message)
-    }
-    return res.json(JSON.stringify(user));
-  })
+  DAO.findOrCreateUser(
+    {
+      username: req.body.username,
+      password: req.body.password,
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName
+    })
+    .then(function(user){
+      res.json(JSON.stringify(user))
+    }, function(err){
+      res.send(err.message)
+      });
+
   });
 
   router.get('/signout', function(req, res) {
@@ -69,29 +77,29 @@ module.exports = function (passport) {
 
 
   router.get('/getOwnQuestions', isAuthenticated, function(req, res){
-    DAO.getUserQuestions(req.session.userId, function (err, users) {
-      if (err){
+    DAO.getUserQuestions(req.session.userId)
+      .then(function(users){
+        res.json(JSON.stringify(users));
+      },
+        function (err) {
         res.send(err);
-      }
-      res.json(JSON.stringify(users));
-    })
+      })
+
   });
   router.get('/getAllQuestions', isAuthenticated, function (req, res) {
-    DAO.getAllQuestions(function (err, users) {
-      if (err){
-        res.send(err);
-      }
-      res.json(JSON.stringify(users));
-    })
+    DAO.getAllQuestions()
+      .then(users=>{res.json(JSON.stringify(users))},
+      err=>{res.send(err)})
   });
 
   router.post('/addQuestion', isAuthenticated, function(req, res){
-    DAO.addQuestion(req.param('title'),req.param('question'),req.session.userId, function (err, question) {
-      if(err){
+    DAO.addQuestion(req.param('title'),req.param('question'),req.session.userId)
+      .then(function(question) {
+        res.json(JSON.stringify(question));
+      },
+        function(err) {
         res.send('error while adding question'+err);
-      }
-      res.json(JSON.stringify(question));
-    })
+      });
   });
   router.get('/deleteQuestion/:questionId', isAuthenticated, function(req, res){
     DAO.isQuestionOwner(req.session.userId,req.params.questionId,function (err, isAuthor) {

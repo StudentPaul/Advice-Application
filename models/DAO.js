@@ -14,56 +14,72 @@ var isValidPassword = function(user, password){
 }
 module.exports = function (User, Question, Answer) {
   return{
-    findOrCreateUser : function(req, done){
+    findOrCreateUser : function(userObj){
+      return new Promise(function (resolve, reject) {
+        var email = userObj.email.toLowerCase();
+        var password = userObj.password.toString();
+        var username = userObj.username.toString();
+        var firstName = userObj.firstName.toString();
+        var lastName = userObj.lastName.toString();
 
-      if(!validator.isEmail(req.param('email').toString())){
-        return done(new Error('email is not valid'))
-      }
-      if(!validator.isAlphanumeric(req.param('password').toString())){
-        return done(new Error('Password should contain only letters and numbers'))
-      }
-      if(!validator.isAlphanumeric(req.param('username').toString())){
-        return done(new Error('Username should contain only letters and numbers'))
-      }
-      if(!(req.param('username').length>2 && req.param('username').length<13)){
-        return done(new Error('Username length must be from 3 to 12 chars'));
-      }
-      if(!(req.param('password').length>2 && req.param('password').length<13)){
-        return done(new Error('Password length must be from 3 to 12 chars'));
-      }
-      User.findOne({ 'username' :  req.param('username') }, function(err, user) {
-        // In case of any error, return using the done method
-        if (err){
-          //console.log('Error in SignUp: '+err);
-          return done(err);
+        if(!validator.isEmail(email)){
+         return reject(new Error('email is not valid'));
         }
-        // already exists
-        if (user) {
-         // console.log('User already exists with username: '+req.param('username'));
-          return done(new Error('user already exists'), false);
-        } else {
-          // if there is no user with that email
+        if(!validator.isAlphanumeric(password)){
+         return reject(new Error('Password should contain only letters and numbers'))
+        }
+        if(!validator.isAlphanumeric(username)){
+          return reject(new Error('Username should contain only letters and numbers'))
+        }
+        if(!(username.length>2 && username.length<13)){
+          return reject (new Error('Username length must be from 3 to 12 chars'));
+        }
+        if(!(password.length>2 && password.length<13)){
+          return reject(new Error('Password length must be from 3 to 12 chars'));
+        }
+        User.findOne({$or:
+          [
+            { 'username' :  username },
+            { 'email' : email}
+          ]}, function(err, user) {
+          // In case of any error, return using the done method
+          if (err){
+            //console.log('Error in SignUp: '+err);
+           return reject(err);
+          }
+          // already exists
+          if (user) {
+            if (user.username === username){
+             return reject(new Error('Username already exists'));
+            }
+            if (user.email === email){
+             return reject(new Error('Email already exists'));
+            }
+          }
+
+
           // create the user
           var newUser = new User();
-
           // set the user's local credentials
-          newUser.username = req.param('username');
-          newUser.password = createHash(req.param('password'));
-          newUser.email = req.param('email');
-          newUser.firstName = req.param('firstName');
-          newUser.lastName = req.param('lastName');
+          newUser.username = username;
+          newUser.password = createHash(password);
+          newUser.email = email;
+          newUser.firstName = firstName;
+          newUser.lastName = lastName;
 
           // save the user
           newUser.save(function(err) {
             if (err){
-              //console.log('Error in Saving user: '+err);
-              return done(err) ;
+             return reject(err) ;
             }
-            //console.log('User Registration succesful WITH ID='+newUser._id);
-            return done(null, newUser);
+           return resolve(newUser);
           });
-        }
+
+
+        });
+       //return reject(new Error('unhandled error'))
       });
+
     },
     findUser: function(req, username, password, done) {
       // check in mongo if a user with username exists or not
@@ -89,102 +105,125 @@ module.exports = function (User, Question, Answer) {
       );
 
     },
-    addQuestion: function (title, question, authId, done) {
-      if(!(title.length>0 && title.length<64)){
-        return done(new Error('Title length must be less than 64 and not blank'));
-      }
-      if(!(question.length>0 && question.length<256)){
-        return done(new Error('Question length must be less than 256 and not blank'));
-      }
-      var newQuestion = new Question();
-      newQuestion.title = title;
-      newQuestion.question = question;
-      newQuestion.authorId = authId;
-      newQuestion.date = Date.now();
-      newQuestion.votesUp = 0;
-      newQuestion.votesDown = 0;
-      newQuestion.save(function (err) {
-        if (err){
-          return done(err)
+    addQuestion: function (title, question, authId) {
+      return new Promise(function (resolve, reject) {
+        if(!(title.length>0 && title.length<64)){
+          return reject(new Error('Title length must be less than 64 and not blank'));
         }
-        //console.log('Question successfully added');
-        return done(null, newQuestion);
+        if(!(question.length>0 && question.length<256)){
+          return reject(new Error('Question length must be less than 256 and not blank'));
+        }
+        var newQuestion = new Question();
+        newQuestion.title = title;
+        newQuestion.question = question;
+        newQuestion.authorId = authId;
+        newQuestion.date = Date.now();
+        newQuestion.votesUp = 0;
+        newQuestion.votesDown = 0;
+        newQuestion.save(function (err) {
+          if (err){
+            return reject(err)
+          }
+          return resolve(newQuestion);
+        })
       })
+
     },
-    getUserQuestions: function (userId, done) {
-      Question.find({authorId: userId},function (err, questions) {
-        if (err){
-          return done(new Error('Error while getting user"s questions'))
-        }
-        return done(null, questions);
+    getUserQuestions: function (userId) {
+      return new Promise(function (resolve, reject) {
+        Question.find({authorId: userId},function (err, questions) {
+          if (err){
+            return reject(new Error('Error while getting user"s questions'))
+          }
+          return resolve(questions);
+        })
       })
+
     },
-    getAllQuestions: function (done) {
-      Question.find(null,function (err, questions) {
-        if (err){
-          return done(new Error('Error while getting all questions'))
-        }
-        return done(null, questions);
+    getAllQuestions: function () {
+      return new Promise(function (resolve, reject) {
+        Question.find(null,function (err, questions) {
+          if (err){
+            return reject(new Error('Error while getting all questions'))
+          }
+          return resolve(questions);
+        })
       })
+
     },
-    addAnswer: function (questionId, answer, authorId, isVoteUp, done) {
-      if(answer.length >256){
-        return done(new Error('Answer length should be shorter than 256 chars'))
-      }
-      var newAnswer = new Answer();
-      newAnswer.questionId = questionId;
-      newAnswer.answer = answer;
-      newAnswer.authorId = authorId;
-      newAnswer.isVoteUp = isVoteUp || 0;
-      newAnswer.save(function (err) {
-        if (err){
-          return done(err)
+    addAnswer: function (questionId, answer, authorId, isVoteUp) {
+      return new Promise (function(resolve, reject){
+        if(answer.length >256){
+          return reject(new Error('Answer length should be shorter than 256 chars'))
         }
-        //console.log('Answer successfully added');
-        return done(null, newAnswer);
+        var newAnswer = new Answer();
+        newAnswer.questionId = questionId;
+        newAnswer.answer = answer;
+        newAnswer.authorId = authorId;
+        newAnswer.isVoteUp = isVoteUp || 0;
+        newAnswer.save(function (err) {
+          if (err){
+            return reject(err)
+          }
+          //console.log('Answer successfully added');
+          return resolve(newAnswer);
+        })
       })
+
     },
-    getQuestionAnswers: function (questionId, done) {
-      Answer.find({questionId: questionId},function (err, answers) {
-        if (err){
-          return done(new Error('Error while getting questin"s answers'))
-        }
-        return done(null, answers);
+    getQuestionAnswers: function (questionId) {
+      return new Promise (function (resolve, reject) {
+        Answer.find({questionId: questionId},function (err, answers) {
+          if (err){
+            return reject(new Error('Error while getting questin"s answers'))
+          }
+          return resolve(null, answers);
+        })
       })
+
     },
-    findUserById: function (userId, done) {
-      User.findOne({_id: userId}, function (err, user) {
-        if (err){
-          return done( new Error("Error while looking for user with that Id"))
-        }
-        return done(null, user)
+    findUserById: function (userId) {
+      return new Promise (function (resolve, reject) {
+        User.findOne({_id: userId}, function (err, user) {
+          if (err){
+            return reject( new Error("Error while looking for user with that Id"))
+          }
+          return resolve(user)
+        })
       })
+
     },
     deleteQuestion: function (questionId, done) {
-      Question.findByIdAndRemove(questionId, function (err, question) {
-        if(err){
-          return done(err);
-        }
-        Answer.remove( {questionId : questionId} , function (err, obj) {
-          if (err){
-            return done(err, question);
+      return new Promise (function(resolve, reject){
+        Question.findByIdAndRemove(questionId, function (err, question) {
+          if(err){
+            return reject(err);
           }
-          return done(null, question);
-        })
+          Answer.remove( {questionId : questionId} , function (err, obj) {
+            if (err){
+              return reject(err);
+            }
+            return resolve(question);
+          })
 
+        })
       })
+
     },
     isQuestionOwner: function (ownerId, questionId, done) {
-      Question.findOne({_id:questionId},function (err,question) {
-        if(err) {
-          return done(err)
-        }
-        if (ownerId == question.authorId) {
-          return done(null, true)
-        } else {
-          return done(null, false)
-        }
+      return new Promise (function (resolve, reject) {
+        Question.findOne({_id:questionId},function (err,question) {
+          if(err) {
+            return reject(err)
+          }
+          if (ownerId == question.authorId) {
+            return resolve(true)
+          } else {
+            return resolve(false)
+          }
+        })
       })
+
     }
   }
 }

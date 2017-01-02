@@ -28,95 +28,65 @@ describe('DAO tests', function () {
     };
     //DAO filled with stub
     var DAO = require('../models/DAO')(User, null, null);
-    //
-    it('user with appropriate data registered', function (done) {
 
+    it('user with appropriate data registered', function (done) {
       //stub for request object
+
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo111'
-          }
-          if (paramName === 'password') {
-            return '1234'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "Pavlo111",
+        password: "1234",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
 
-
-      DAO.findOrCreateUser(req, function (err, user) {
-        if (err) {
-          return done(err)
-        }
-        return done()
-      })
-    })
-
+      DAO.findOrCreateUser(req).then(user=>{done()},error=>{done(error)});
+    });
     it('too short name handles Error', function (done) {
       //mock for request object
+
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pa'
-          }
-          if (paramName === 'password') {
-            return '1234'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "Pa",
+        password: "1234",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
-        assert.equal('Username length must be from 3 to 12 chars', err.message);
-        return done()
-      })
+      DAO.findOrCreateUser(req).then((user)=>{done(err)},err=>{(err.message==='Username length must be from 3 to 12 chars')?done():done(err)});
 
     })
     it('too long name handles Error', function (done) {
       //mock for request object
+
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'PavloAndrusiak'
-          }
-          if (paramName === 'password') {
-            return '1234'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "PavloAndrusiak",
+        password: "1234",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
-        assert.equal('Username length must be from 3 to 12 chars', err.message);
-        return done()
-      })
+      DAO.findOrCreateUser(req).then(
+        user=>{done('User is added')},
+        function(err){
+          assert.equal('Username length must be from 3 to 12 chars', err.message);
+          return done()
+      });
 
     })
     it('uncorrect username chars throws Error', function (done) {
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pav%'
-          }
-          if (paramName === 'password') {
-            return '1234'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "ff@ff",
+        password: "1234",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
+      DAO.findOrCreateUser(req).then(user=>{done('User is added')}, function (err) {
         assert.equal('Username should contain only letters and numbers', err.message);
         return done()
       })
@@ -125,20 +95,14 @@ describe('DAO tests', function () {
     it('uncorrect password chars throws Error', function (done) {
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo'
-          }
-          if (paramName === 'password') {
-            return '123  4'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "ffff",
+        password: "12 34",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
+      DAO.findOrCreateUser(req).then(user=>{done("user created")}, function (err) {
         assert.equal('Password should contain only letters and numbers', err.message);
         return done()
       })
@@ -147,95 +111,110 @@ describe('DAO tests', function () {
     it('too short password throws Error', function (done) {
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo'
-          }
-          if (paramName === 'password') {
-            return '12'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "ffff",
+        password: "3",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
+      DAO.findOrCreateUser(req).then(user=>{done('user added')},function (err, user) {
         assert.equal('Password length must be from 3 to 12 chars', err.message);
         return done()
-      })
+      });
 
     })
     it('too long password  throws Error', function (done) {
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo'
-          }
-          if (paramName === 'password') {
-            return '1235235dsgdfg345325'
-          }
-          if (paramName === 'email') {
-            return 'soc@ukr.net'
-          }
-        }
+        username: "ffff",
+        password: "3333222211112",
+        email: 'soc@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
+      DAO.findOrCreateUser(req).then(user=>{done('User added')},function (err, user) {
         assert.equal('Password length must be from 3 to 12 chars', err.message);
         return done()
-      })
+      });
 
     })
     it('invalid email  throws Error', function (done) {
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo'
-          }
-          if (paramName === 'password') {
-            return '123fd'
-          }
-          if (paramName === 'email') {
-            return 'socukr'
-          }
-        }
+        username: "ffff",
+        password: "213",
+        email: 'socfukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
+      DAO.findOrCreateUser(req).then(user=>{done('User added')},function (err, user) {
         assert.equal('email is not valid', err.message);
+        return done()
+      });
+    })
+
+
+    it('if username is already in database throws error ', function (done) {
+      // change stub's state to find same user in DB
+      User.findOne = function (queryObj, done) {
+        return done(null, {username:'Pavlo'}) //user with such username was found
+      };
+      //mock for request object
+      var req = {
+        username: "Pavlo",
+        password: "213",
+        email: 'socf@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
+      };
+      //
+      DAO.findOrCreateUser(req).then(user=>{done('userAdded')},function (err, user) {
+        assert.equal('Username already exists', err.message);
+        return done()
+      });
+
+    })
+    it('if email is already in database throws error ', function (done) {
+      // change stub's state to find same user in DB
+      User.findOne = function (queryObj, done) {
+        return done(null, {username:'Pavlo2', email:'socio@ukr.net'}) //user with such username was found
+      };
+      //mock for request object
+      var req = {
+        username: "Pavlo",
+        password: "213",
+        email: 'socio@ukr.net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
+      };
+      //
+      DAO.findOrCreateUser(req).then(user=>{done('user added')},function (err, user) {
+        assert.equal('Email already exists', err.message);
         return done()
       })
 
     })
-
-
-    it('if user is already in database throws error ', function (done) {
+    it('treat uppercase email and lowcase as the same email ', function (done) {
       // change stub's state to find same user in DB
       User.findOne = function (queryObj, done) {
-        return done(null, true) //user with such username was found
+        return done(null, {username:'Pavlo2', email:'socio@ukr.net'}) //user with such username was found
       };
       //mock for request object
       var req = {
-        param: function (paramName) {
-          if (paramName === 'username') {
-            return 'Pavlo'
-          }
-          if (paramName === 'password') {
-            return '123fd'
-          }
-          if (paramName === 'email') {
-            return 'socio@ukr.net'
-          }
-        }
+        username: "Pavlo",
+        password: "213",
+        email: 'SoCio@ukr.Net',
+        firstName: "Paul",
+        lastName: "Andrusiak"
       };
       //
-      DAO.findOrCreateUser(req, function (err, user) {
-        assert.equal('user already exists', err.message);
+      DAO.findOrCreateUser(req).then(user=>{done('user added')},function (err, user) {
+        assert.equal('Email already exists', err.message);
         return done()
-      })
+      });
 
     })
   });
@@ -250,15 +229,23 @@ describe('DAO tests', function () {
       var DAO = require('../models/DAO')(null, Question, null);
       //
       it('Title and question appropriate length', function (done) {
-        DAO.addQuestion("Question title", "Question text",234234, function (err, user) {
-          assert.equal(null, err);
-          return done()
-        })
+        var title ='Question title';
+        var question ='Question text';
+        DAO.addQuestion(title, question,234234)
+          .then(function (user) {
+            //assert.equal('saved', user);
+            assert.notEqual(null, user)
+            assert.equal(user.title, title)
+            assert.equal(user.question, question)
+            return done()
+          })
+
+
 
       });
     it('Too long title handle error', function (done) {
       DAO.addQuestion(Array(20).join("Title"),
-        "Question text",234234, function (err, user) {
+        "Question text",234234).then(null, function(err) {
         assert.equal('Title length must be less than 64 and not blank', err.message);
         return done()
       })
@@ -267,7 +254,7 @@ describe('DAO tests', function () {
     it('Too long question length handle error', function (done) {
       DAO.addQuestion("Question title",
         Array(50).join("Question"),
-        234234, function (err, question) {
+        234234).then(null, function (err) {
           assert.equal('Question length must be less than 256 and not blank', err.message);
           return done()
         })
@@ -277,7 +264,7 @@ describe('DAO tests', function () {
       Question.prototype.save = function (done) {
         return done(new Error('Error while writing record'))
       }
-      DAO.addQuestion("Qest. title", "question", 23452, function (err, user) {
+      DAO.addQuestion("Qest. title", "question", 23452).then(null, function (err) {
         assert.equal('Error while writing record', err.message)
         return done()
       })
@@ -291,26 +278,35 @@ describe('DAO tests', function () {
     };
     var DAO = require('../models/DAO')(null, null, Answer);
     it('Add valid answer', function (done) {
-        DAO.addAnswer('324234','Answer is here', '34526',0, function (err, answer) {
-          assert.equal(null, err);
-          done();
-        })
+        DAO.addAnswer('324234','Answer is here', '34526',0)
+          .then(function(user){
+            return done()
+          },
+            function(){
+            return done('error returned')
+            })
       });
     it('Too long answer', function (done) {
-      DAO.addAnswer('324234',Array(80).join("Answer"), '34526',0, function (err, answer) {
-        assert.equal('Answer length should be shorter than 256 chars', err.message);
-        done();
-      })
+      DAO.addAnswer('324234',Array(80).join("Answer"), '34526',0)
+        .then(answer=>{done('answer added')},
+        function(err){
+            assert.equal('Answer length should be shorter than 256 chars', err.message);
+            done();
+          })
     });
     it('Writing error handled properly', function (done) {
       Answer.prototype.save = function (done) {
         return done(new Error('Error while writing record'));
       };
-      DAO.addAnswer('324234','Answer', '34526',0, function (err, answer) {
-        assert.equal('Error while writing record', err.message);
-        done();
-      })
-    })
+      DAO.addAnswer('324234', 'Answer', '34526', 0)
+        .then(answer=> {
+            done('answer added')
+          },
+          function (err) {
+            assert.equal('Error while writing record', err.message);
+            done();
+          })
+    });
 
   });
   describe('#deleteQuestion', function () {
